@@ -96,6 +96,12 @@ public class CreateLogObject {
 		associationMapping.put(otherObjectType, associationName);
 	}
 
+	private static void setLogNumberOfChangedMembers(IMendixObject logObject, IContext sudoContext,
+			IContext currentContext) {
+		logObject.setValue(sudoContext, Log.MemberNames.NumberOfChangedMembers.toString(),
+				(Integer) logObject.getValue(currentContext, Log.MemberNames.NumberOfChangedMembers.toString()) + 1);
+	}
+
 	public static IMendixObject CreateAuditLogItems(IMendixObject inputObject, IContext context) throws CoreException {
 		TypeOfLog log = inputObject.isNew() ? TypeOfLog.Add : TypeOfLog.Change;
 
@@ -292,10 +298,12 @@ public class CreateLogObject {
 			else
 				logLine.setValue(context, LogLine.MemberNames.OldValue.toString(), oldValue);
 
-			if (!oldValue.equals(newValue) || isNew) {
+			if (isNew) {
+				_logNode.trace("Member: " + member.getName() + " has just added.");
+				setLogNumberOfChangedMembers(logObject, context, context);
+			} else if (!oldValue.equals(newValue)) {
 				_logNode.trace("Member: " + member.getName() + " has changed.");
-				logObject.setValue(context, Log.MemberNames.NumberOfChangedMembers.toString(),
-						(Integer) logObject.getValue(context, Log.MemberNames.NumberOfChangedMembers.toString()) + 1);
+				setLogNumberOfChangedMembers(logObject, context, context);
 			}
 
 			return Collections.singletonList(logLine);
@@ -337,11 +345,12 @@ public class CreateLogObject {
 				}
 			}
 
-			if (currentID != previousID || isNew) {
+			if (isNew) {
+				_logNode.trace("Member: " + member.getName() + " has recently added.");
+				setLogNumberOfChangedMembers(logObject, sudocontext, sudocontext);
+			} else if (currentID != previousID) {
 				_logNode.trace("Member: " + member.getName() + " has changed.");
-				logObject.setValue(sudocontext, Log.MemberNames.NumberOfChangedMembers.toString(),
-						(Integer) logObject.getValue(sudocontext, Log.MemberNames.NumberOfChangedMembers.toString())
-								+ 1);
+				setLogNumberOfChangedMembers(logObject, sudocontext, sudocontext);
 			}
 
 			return logLineList;
@@ -451,9 +460,7 @@ public class CreateLogObject {
 
 			if (!currentIDList.isEmpty() || !previousIDList.isEmpty() || isNew) {
 				_logNode.trace("Member: " + member.getName() + " has changed.");
-				logObject.setValue(sudocontext, Log.MemberNames.NumberOfChangedMembers.toString(),
-						(Integer) logObject.getValue(currentcontext, Log.MemberNames.NumberOfChangedMembers.toString())
-								+ 1);
+				setLogNumberOfChangedMembers(logObject, sudocontext, currentcontext);
 			}
 
 			return logLineList;
