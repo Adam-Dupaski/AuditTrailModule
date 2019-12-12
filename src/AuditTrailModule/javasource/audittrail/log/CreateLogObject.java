@@ -347,7 +347,7 @@ public class CreateLogObject {
 			return logLineList;
 		}
 		_logNode.trace("Skipping member: " + member.getName() + " because it has not changed.");
-		return null;
+		return Collections.emptyList();
 	}
 
 	private static List<IMendixObject> createLogLinesForReferencedObject(IMendixIdentifier attributeId,
@@ -460,7 +460,7 @@ public class CreateLogObject {
 		}
 
 		_logNode.trace("Skipping member: " + member.getName() + " because it has not changed.");
-		return null;
+		return Collections.emptyList();
 	}
 
 	private static String getValue(IMendixObjectMember<?> member, boolean fromCache, IContext context) {
