@@ -385,7 +385,7 @@ public class CreateLogObject {
 		Map<String, Object> nameToValueReferenceLog = new HashMap<String, Object>();
 		nameToValueReferenceLog.put(ReferenceLog.MemberNames.AttributeID.toString(),
 				String.valueOf(attributeId.toLong()));
-		nameToValueReferenceLog.put(ReferenceLog.MemberNames.Operation.toString(), typeOfReference.getCaption());
+		nameToValueReferenceLog.put(ReferenceLog.MemberNames.Operation.toString(), typeOfReference.toString());
 		nameToValueReferenceLog.put(ReferenceLog.MemberNames.ReferenceLog_LogLine.toString(), parentId);
 
 		return createMendixObject(ReferenceLog.getType(), nameToValueReferenceLog);
