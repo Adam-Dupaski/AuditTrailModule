@@ -299,7 +299,7 @@ public class CreateLogObject {
 				logLine.setValue(context, LogLine.MemberNames.OldValue.toString(), oldValue);
 
 			if (isNew) {
-				_logNode.trace("Member: " + member.getName() + " has just added.");
+				_logNode.trace("Member: " + member.getName() + " was added.");
 				setLogNumberOfChangedMembers(logObject, context, context);
 			} else if (!oldValue.equals(newValue)) {
 				_logNode.trace("Member: " + member.getName() + " has changed.");
@@ -346,7 +346,7 @@ public class CreateLogObject {
 			}
 
 			if (isNew) {
-				_logNode.trace("Member: " + member.getName() + " has recently added.");
+				_logNode.trace("Member: " + member.getName() + " was added.");
 				setLogNumberOfChangedMembers(logObject, sudocontext, sudocontext);
 			} else if (currentID != previousID) {
 				_logNode.trace("Member: " + member.getName() + " has changed.");
@@ -458,7 +458,10 @@ public class CreateLogObject {
 						TypeOfReferenceLog.Deleted));
 			}
 
-			if (!currentIDList.isEmpty() || !previousIDList.isEmpty() || isNew) {
+			if (isNew) {
+				_logNode.trace("Member: " + member.getName() + " was added.");
+				setLogNumberOfChangedMembers(logObject, sudocontext, currentcontext);
+			} else if (!currentIDList.isEmpty() || !previousIDList.isEmpty()) {
 				_logNode.trace("Member: " + member.getName() + " has changed.");
 				setLogNumberOfChangedMembers(logObject, sudocontext, currentcontext);
 			}
