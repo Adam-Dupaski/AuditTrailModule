@@ -337,11 +337,11 @@ public class CreateLogObject {
 			} else {
 				if (currentID != null) {
 					logLineList.addAll(createLogLinesForReferencedObject(currentID, logLine.getId(), currentcontext,
-							TypeOfReferenceLog.Deleted));
+							TypeOfReferenceLog.Added));
 				}
 				if (previousID != null) {
 					logLineList.addAll(createLogLinesForReferencedObject(previousID, logLine.getId(), currentcontext,
-							TypeOfReferenceLog.Added));
+							TypeOfReferenceLog.Deleted));
 				}
 			}
 
