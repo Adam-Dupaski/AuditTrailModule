@@ -96,8 +96,11 @@ public class CreateLogObject {
 		associationMapping.put(otherObjectType, associationName);
 	}
 
-	private static void setLogNumberOfChangedMembers(IMendixObject logObject, IContext sudoContext,
-			IContext currentContext) {
+	private static void incNumberOfChangedMembers(IMendixObject logObject, IContext sudoContext,
+			IContext currentContext, boolean isNew, String memberName) {
+		if (isNew) _logNode.trace("Member: " + memberName + " was added.");
+		else _logNode.trace("Member: " + memberName + " has changed.");
+		
 		logObject.setValue(sudoContext, Log.MemberNames.NumberOfChangedMembers.toString(),
 				(Integer) logObject.getValue(currentContext, Log.MemberNames.NumberOfChangedMembers.toString()) + 1);
 	}
@@ -285,7 +288,9 @@ public class CreateLogObject {
 	private static List<IMendixObject> createSingleLogLine(IMendixObject logObject, IMendixObjectMember<?> member,
 			String memberType, boolean isNew, IContext context) throws CoreException {
 		String oldValue = getValue(member, false, context), newValue = getValue(member, true, context);
-		if (IncludeOnlyChangedAttributes == false || !oldValue.equals(newValue) || isNew) {
+		
+		final boolean newOrChangedObject = !oldValue.equals(newValue) || isNew;
+		if (!IncludeOnlyChangedAttributes || newOrChangedObject) {
 			IMendixObject logLine = Core.instantiate(context, LogLine.getType());
 
 			logLine.setValue(context, LogLine.MemberNames.Member.toString(), member.getName());
@@ -298,13 +303,8 @@ public class CreateLogObject {
 			else
 				logLine.setValue(context, LogLine.MemberNames.OldValue.toString(), oldValue);
 
-			if (isNew) {
-				_logNode.trace("Member: " + member.getName() + " was added.");
-				setLogNumberOfChangedMembers(logObject, context, context);
-			} else if (!oldValue.equals(newValue)) {
-				_logNode.trace("Member: " + member.getName() + " has changed.");
-				setLogNumberOfChangedMembers(logObject, context, context);
-			}
+			if (newOrChangedObject)
+				incNumberOfChangedMembers(logObject, context, context, isNew, member.getName());
 
 			return Collections.singletonList(logLine);
 		}
@@ -319,7 +319,8 @@ public class CreateLogObject {
 		IMendixIdentifier currentID = member.getValue(currentcontext);
 		IMendixIdentifier previousID = member.getOriginalValue(currentcontext);
 
-		if (IncludeOnlyChangedAttributes == false || !Objects.equals(currentID, previousID) || isNew) {
+		final boolean newOrChangedObject = !Objects.equals(currentID, previousID) || isNew;
+		if (!IncludeOnlyChangedAttributes || newOrChangedObject) {
 			List<IMendixObject> logLineList = new ArrayList<IMendixObject>();
 			IMendixObject logLine = Core.instantiate(sudocontext, LogLine.getType());
 
@@ -331,7 +332,7 @@ public class CreateLogObject {
 
 			logLineList.add(logLine);
 
-			if (currentID == previousID && currentID != null) {
+			if (!Objects.equals(currentID, previousID)) {
 				logLineList.addAll(createLogLinesForReferencedObject(previousID, logLine.getId(), currentcontext,
 						TypeOfReferenceLog.No_Change));
 			} else {
@@ -345,13 +346,8 @@ public class CreateLogObject {
 				}
 			}
 
-			if (isNew) {
-				_logNode.trace("Member: " + member.getName() + " was added.");
-				setLogNumberOfChangedMembers(logObject, sudocontext, sudocontext);
-			} else if (currentID != previousID) {
-				_logNode.trace("Member: " + member.getName() + " has changed.");
-				setLogNumberOfChangedMembers(logObject, sudocontext, sudocontext);
-			}
+			if (newOrChangedObject)
+				incNumberOfChangedMembers(logObject, sudocontext, sudocontext, isNew, member.getName());
 
 			return logLineList;
 		}
@@ -423,7 +419,8 @@ public class CreateLogObject {
 		currentIDList.sort(IDCOMPARATOR);
 		previousIDList.sort(IDCOMPARATOR);
 
-		if (IncludeOnlyChangedAttributes == false || !Objects.equals(currentIDList, previousIDList) || isNew) {
+		final boolean newOrChangedObjects = !Objects.equals(currentIDList, previousIDList) || isNew;
+		if (!IncludeOnlyChangedAttributes || newOrChangedObjects) {
 
 			// The size below is just a good guess
 			List<IMendixObject> logLineList = new ArrayList<IMendixObject>(currentIDList.size() + 1);
@@ -458,13 +455,8 @@ public class CreateLogObject {
 						TypeOfReferenceLog.Deleted));
 			}
 
-			if (isNew) {
-				_logNode.trace("Member: " + member.getName() + " was added.");
-				setLogNumberOfChangedMembers(logObject, sudocontext, currentcontext);
-			} else if (!currentIDList.isEmpty() || !previousIDList.isEmpty()) {
-				_logNode.trace("Member: " + member.getName() + " has changed.");
-				setLogNumberOfChangedMembers(logObject, sudocontext, currentcontext);
-			}
+			if (newOrChangedObjects) // Do not increase the number of changed members if nothing changed
+				incNumberOfChangedMembers(logObject, sudocontext, currentcontext, isNew, member.getName());
 
 			return logLineList;
 		}
