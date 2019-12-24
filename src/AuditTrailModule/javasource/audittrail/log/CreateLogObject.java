@@ -332,7 +332,7 @@ public class CreateLogObject {
 
 			logLineList.add(logLine);
 
-			if (!Objects.equals(currentID, previousID)) {
+			if (Objects.equals(currentID, previousID)) {
 				logLineList.addAll(createLogLinesForReferencedObject(previousID, logLine.getId(), currentcontext,
 						TypeOfReferenceLog.No_Change));
 			} else {
@@ -351,6 +351,7 @@ public class CreateLogObject {
 
 			return logLineList;
 		}
+
 		_logNode.trace("Skipping member: " + member.getName() + " because it has not changed.");
 		return Collections.emptyList();
 	}
