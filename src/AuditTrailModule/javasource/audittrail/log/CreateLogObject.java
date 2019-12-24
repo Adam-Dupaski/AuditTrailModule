@@ -316,10 +316,10 @@ public class CreateLogObject {
 	private static List<IMendixObject> createReferenceLogLine(IMendixObject logObject, MendixObjectReference member,
 			boolean isNew, IContext sudocontext, IContext currentcontext) throws CoreException {
 		// get current and previous id
-		IMendixIdentifier currentID = member.getValue(currentcontext);
-		IMendixIdentifier previousID = member.getOriginalValue(currentcontext);
+		IMendixIdentifier currentId = member.getValue(currentcontext);
+		IMendixIdentifier previousId = member.getOriginalValue(currentcontext);
 
-		final boolean newOrChangedObject = !Objects.equals(currentID, previousID) || isNew;
+		final boolean newOrChangedObject = !Objects.equals(currentId, previousId) || isNew;
 		if (!IncludeOnlyChangedAttributes || newOrChangedObject) {
 			List<IMendixObject> logLineList = new ArrayList<IMendixObject>();
 			IMendixObject logLine = Core.instantiate(sudocontext, LogLine.getType());
@@ -332,16 +332,16 @@ public class CreateLogObject {
 
 			logLineList.add(logLine);
 
-			if (Objects.equals(currentID, previousID)) {
-				logLineList.addAll(createLogLinesForReferencedObject(previousID, logLine.getId(), currentcontext,
+			if (Objects.equals(currentId, previousId)) {
+				logLineList.addAll(createLogLinesForReferencedObject(previousId, logLine.getId(), currentcontext,
 						TypeOfReferenceLog.No_Change));
 			} else {
-				if (currentID != null) {
-					logLineList.addAll(createLogLinesForReferencedObject(currentID, logLine.getId(), currentcontext,
+				if (currentId != null) {
+					logLineList.addAll(createLogLinesForReferencedObject(currentId, logLine.getId(), currentcontext,
 							TypeOfReferenceLog.Added));
 				}
-				if (previousID != null) {
-					logLineList.addAll(createLogLinesForReferencedObject(previousID, logLine.getId(), currentcontext,
+				if (previousId != null) {
+					logLineList.addAll(createLogLinesForReferencedObject(previousId, logLine.getId(), currentcontext,
 							TypeOfReferenceLog.Deleted));
 				}
 			}
@@ -357,19 +357,19 @@ public class CreateLogObject {
 	}
 
 	private static List<IMendixObject> createLogLinesForReferencedObject(IMendixIdentifier attributeId,
-			IMendixIdentifier parentID, IContext currentcontext, TypeOfReferenceLog typeOfReference)
+			IMendixIdentifier parentId, IContext currentcontext, TypeOfReferenceLog typeOfReference)
 			throws CoreException {
 		if (attributeId == null)
 			return Collections.emptyList();
 
 		return Optional.ofNullable(Core.retrieveId(currentcontext, attributeId)) // Get id of object
-				.map(refObj -> createReferenceObjects(attributeId, parentID, currentcontext, typeOfReference, refObj))
+				.map(refObj -> createReferenceObjects(attributeId, parentId, currentcontext, typeOfReference, refObj))
 				.orElseGet(() -> Collections.emptyList());
 	}
 
-	private static List<IMendixObject> createReferenceObjects(IMendixIdentifier attributeId, IMendixIdentifier parentID,
+	private static List<IMendixObject> createReferenceObjects(IMendixIdentifier attributeId, IMendixIdentifier parentId,
 			IContext currentcontext, TypeOfReferenceLog typeOfReference, IMendixObject refObj) {
-		IMendixObject referenceLog = createReferenceLogObj(attributeId, parentID, typeOfReference);
+		IMendixObject referenceLog = createReferenceLogObj(attributeId, parentId, typeOfReference);
 
 		Stream<IMendixObject> referenceLineObjects = refObj.getMembers(currentcontext).values().stream()
 				.map(member -> createReferenceLineMendixObj(member, currentcontext, referenceLog.getId()));
@@ -414,17 +414,17 @@ public class CreateLogObject {
 			MendixObjectReferenceSet member, boolean isNew, IContext sudocontext, IContext currentcontext)
 			throws CoreException {
 
-		List<IMendixIdentifier> currentIDList = member.getValue(currentcontext);
-		List<IMendixIdentifier> previousIDList = member.getOriginalValue(currentcontext);
+		List<IMendixIdentifier> currentIdList = member.getValue(currentcontext);
+		List<IMendixIdentifier> previousIdList = member.getOriginalValue(currentcontext);
 
-		currentIDList.sort(IDCOMPARATOR);
-		previousIDList.sort(IDCOMPARATOR);
+		currentIdList.sort(IDCOMPARATOR);
+		previousIdList.sort(IDCOMPARATOR);
 
-		final boolean newOrChangedObjects = !Objects.equals(currentIDList, previousIDList) || isNew;
+		final boolean newOrChangedObjects = !Objects.equals(currentIdList, previousIdList) || isNew;
 		if (!IncludeOnlyChangedAttributes || newOrChangedObjects) {
 
 			// The size below is just a good guess
-			List<IMendixObject> logLineList = new ArrayList<IMendixObject>(currentIDList.size() + 1);
+			List<IMendixObject> logLineList = new ArrayList<IMendixObject>(currentIdList.size() + 1);
 
 			IMendixObject logLine = Core.instantiate(sudocontext, LogLine.getType());
 			logLine.setValue(sudocontext, LogLine.MemberNames.Member.toString(), member.getName());
@@ -436,22 +436,22 @@ public class CreateLogObject {
 
 			logLineList.add(logLine);
 
-			List<IMendixIdentifier> unchangedRefs = currentIDList.stream().filter(previousIDList::contains)
+			List<IMendixIdentifier> unchangedRefs = currentIdList.stream().filter(previousIdList::contains)
 					.collect(Collectors.toList());
-			currentIDList.removeAll(unchangedRefs); // References that were added
-			previousIDList.removeAll(unchangedRefs); // References that were removed
+			currentIdList.removeAll(unchangedRefs); // References that were added
+			previousIdList.removeAll(unchangedRefs); // References that were removed
 
 			for (IMendixIdentifier unchangedRef : unchangedRefs) {
 				logLineList.addAll(createLogLinesForReferencedObject(unchangedRef, logLine.getId(), currentcontext,
 						TypeOfReferenceLog.No_Change));
 			}
 
-			for (IMendixIdentifier currentRef : currentIDList) {
+			for (IMendixIdentifier currentRef : currentIdList) {
 				logLineList.addAll(createLogLinesForReferencedObject(currentRef, logLine.getId(), currentcontext,
 						TypeOfReferenceLog.Added));
 			}
 
-			for (IMendixIdentifier previousRef : previousIDList) {
+			for (IMendixIdentifier previousRef : previousIdList) {
 				logLineList.addAll(createLogLinesForReferencedObject(previousRef, logLine.getId(), currentcontext,
 						TypeOfReferenceLog.Deleted));
 			}
